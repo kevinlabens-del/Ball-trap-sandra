@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shooter Challenge Test</title>
+<style>
+html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:Arial}
+#home,#game{position:fixed;inset:0}
+#home{display:flex;justify-content:center;align-items:center;background:#000}
+#cover{max-width:100%;max-height:100%;object-fit:contain}
+#startBtn{
+position:absolute;
+top:70%;
+left:75%;
+transform:translate(-50%,-50%);
+padding:12px 20px;
+font-size:20px;
+border:none;
+border-radius:12px;
+z-index:20;
+}
+#game{display:none}
+#anim{width:100%;height:100%;object-fit:contain}
+#replay{
+display:none;
+position:absolute;
+right:15px;
+bottom:15px;
+padding:10px 18px;
+z-index:20;
+}
+</style>
+</head>
+<body>
+
+<div id="home">
+<img id="cover" src="cover.png" alt="cover">
+<button id="startBtn">🎯 ESSAYE MOI</button>
+</div>
+
+<div id="game">
+<img id="anim" src="frame01.png" alt="animation">
+
+</div>
+
+<audio id="shot" preload="auto" src="shotgun.mp3"></audio>
+
+<script>
+const frames=[
+'frame01.png','frame02.png','frame03.png','frame04.png',
+'frame05.png','frame06.png','frame07.png','frame08.png','frame09.png'
+];
+
+const home=document.getElementById('home');
+const game=document.getElementById('game');
+const anim=document.getElementById('anim');
+const replay=null;
+const shot=document.getElementById('shot');
+
+let running=false;
+let activeTimer=null;
+
+function clearAnim(){
+ if(activeTimer){ clearTimeout(activeTimer); activeTimer=null; }
+}
+
+function playGunshot(){
+ try{
+   shot.pause();
+   shot.currentTime=0;
+   shot.play().catch(()=>{});
+ }catch(e){}
+}
+
+function resetUI(){
+ clearAnim();
+ running=false;
+ game.style.display='none';
+ /* replay removed */
+ home.style.display='flex';
+ anim.src='frame01.png';
+}
+
+function startAnimation(){
+ if(running) return;
+ running=true;
+
+ // déverrouillage audio mobile
+ shot.muted=true;
+ shot.play().then(()=>{
+   shot.pause();
+   shot.currentTime=0;
+   shot.muted=false;
+
+   launch();
+ }).catch(()=>{
+   shot.muted=false;
+   launch();
+ });
+
+ function launch(){
+   home.style.display='none';
+   game.style.display='block';
+   /* replay removed */
+
+   let loop=1;
+   let frame=0;
+
+   function nextFrame(){
+      anim.src=frames[frame];
+
+      if(frame===8){
+         playGunshot(); // tir boucle 1 et boucle 2
+      }
+
+      frame++;
+
+      if(frame < frames.length){
+         activeTimer=setTimeout(nextFrame,220);
+         return;
+      }
+
+      if(loop < 2){
+         loop++;
+         frame=0;
+         activeTimer=setTimeout(nextFrame,350);
+         return;
+      }
+
+      activeTimer=setTimeout(()=>{
+         anim.src='final_bulle.png';
+         running=false;
+         setTimeout(()=>{ resetUI(); },5000);
+      },700);
+   }
+
+   nextFrame();
+ }
+}
+
+document.getElementById('startBtn').addEventListener('click',startAnimation);
+// replay removed
+</script>
+
+</body>
+</html>
